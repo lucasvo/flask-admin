@@ -677,7 +677,11 @@ class BaseModelView(BaseView):
                                  search, filters)
 
         def get_value(obj, field):
-            return getattr(obj, field, None)
+            val = getattr(obj, field, None)
+            if callable(val):
+                return val()
+            else:
+                return val
 
         return self.render(self.list_template,
                                data=data,
