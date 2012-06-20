@@ -56,10 +56,8 @@ class ModelView(BaseModelView):
     def scaffold_sortable_columns(self):
         return {}
 
-
     def scaffold_form(self):
         return model_form(self.model, base_class=AdminModelForm, converter=AdminModelConverter())
-
 
     def create_form(self, form, obj=None):
         return self._edit_form_class(form, obj=obj)
@@ -81,4 +79,8 @@ class ModelView(BaseModelView):
 
     def create_model(self, form):
         form.save()
+        return True
+
+    def delete_model(self, instance):
+        instance.delete()
         return True
