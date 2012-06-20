@@ -66,6 +66,7 @@
     {% endwith %}
 
     <div class="container">
+      <h1>{% if admin_view.category %}{{ admin_view.category }} - {% endif %}{{ admin_view.name }}</h1>
       {% block body %}{% endblock %}
     </div>
     {% endblock %}
