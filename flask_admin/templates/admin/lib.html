@@ -73,33 +73,59 @@
 {% endif %}
 {%- endmacro %}
 
+{% macro render_subform(form) -%}
+    {{ form.hidden_tag() }}
+    {% for f in form if f.widget.__class__.__name__ != "HiddenInput" %}
+    <div class="control-group{% if f.errors %} error{% endif %}">
+      {{ f.label(class='control-label') }}
+      <div class="controls">
+        {% if f.type == "FieldList" %}
+            {{ f.append_entry() and '' }}
+            <div>
+            {% for subform in f %}
+             {% if loop.last %}
+                 <div style="display:none;" class="form-template" id="form-template-{{ f.name }}">
+                    <p><a class="form-template-remove" href="#">Remove</a></p>
+                     {{ render_subform(subform) }}
+                     <hr>
+                 </div>
+             {% else %}
+                <div>
+                    <p><a class="form-template-remove" href="#">Remove</a></p>
+                     {{ render_subform(subform) }}<hr>
+                </div>
+             {% endif %}
+            {% endfor %}
+            </div>
+            <p><a class="form-template-add" href="#">Add another</a></p>
+        {% else %}
+        <div>
+          {% if not focus_set %}
+          {{ f(autofocus='autofocus') }}
+          {% set focus_set = True %}
+          {% else %}
+          {{ f() }}
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if f.errors %}
+          <ul>
+          {% for e in f.errors %}
+            <li>{{ e }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+{% endmacro %}
+
 {% macro render_form(form, cancel_url, extra=None) -%}
     <form action="" method="POST" class="form-horizontal"{% if form.has_file_field %} enctype="multipart/form-data"{% endif %}>
       <fieldset>
-        {{ form.hidden_tag() }}
 
-        {% for f in form if f.name != 'csrf_token' and f.name != 'csrf' %}
-        <div class="control-group{% if f.errors %} error{% endif %}">
-          {{ f.label(class='control-label') }}
-          <div class="controls">
-            <div>
-              {% if not focus_set %}
-              {{ f(autofocus='autofocus') }}
-              {% set focus_set = True %}
-              {% else %}
-              {{ f() }}
-              {% endif %}
-            </div>
-            {% if f.errors %}
-              <ul>
-              {% for e in f.errors %}
-                <li>{{ e }}</li>
-              {% endfor %}
-              </ul>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
+        {{ render_subform(form) }}
+
         <div class="control-group">
           <div class="controls">
             <input type="submit" class="btn btn-primary btn-large" value="{{ _gettext('Submit') }}" />

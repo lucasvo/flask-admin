@@ -74,6 +74,54 @@
     <script src="{{ url_for('admin.static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
     <script src="{{ url_for('admin.static', filename='chosen/chosen.jquery.min.js') }}" type="text/javascript"></script>
 
+    <script type="text/javascript">
+        function replaceFormNumber(prefix, el, n) {
+            el.find('input,textarea,select,label').each(function() {
+                function prepare(input, field_name, n) {
+                    var name = input.attr(field_name);
+                    if (name && name.substring(0, prefix.length+1) == prefix+'-') {
+                        var stripped_name = name.substring(name.indexOf('-', prefix.length+1)+1);
+                        input.attr(field_name, prefix+'-'+n+'-'+stripped_name);
+                    }
+                }
+                prepare($(this), 'name', n);
+                prepare($(this), 'id', n);
+                prepare($(this), 'for', n);
+            });
+        }
+        $('.form-template').each(function() {
+            var prefix = /^form-template-(.*)$/.exec($(this).attr('id'))[1];
+            replaceFormNumber(prefix, $(this), '#');
+        });
+        $('.form-template-add').click(function(ev) {
+            var tmpl = $(this).closest('div').find('.form-template');
+
+            // HACK to get the next free form number
+            var i=0;
+            while (true) {
+                var prefix = /^form-template-(.*)$/.exec(tmpl.attr('id'))[1];
+                if ($('#'+prefix+'-'+i+'-csrf_token').length == 0) {
+                    break;
+                }
+                i++;
+            }
+
+            var form = tmpl.clone().attr('id', null);
+
+            replaceFormNumber(prefix, form, i);
+
+            form.show();
+            tmpl.parent().append(form);
+
+            $('.form-template-remove').click(function(ev) {
+                $(this).closest('div').remove();
+            });
+        });
+        $('.form-template-remove').click(function(ev) {
+            $(this).closest('div').remove();
+        });
+    </script>
+
     {% block tail %}
     {% endblock %}
   </body>
