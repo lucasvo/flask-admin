@@ -32,7 +32,7 @@ class AdminModelConverter(ModelConverter):
             'validators': [],
             'filters': [],
         }
-        form_class = model_form(field.document_type_obj, base_class=AdminModelForm, converter=AdminModelConverter(), field_args={})
+        form_class = model_form(field.document_type_obj, base_class=AdminModelForm, converter=self.__class__(), field_args={})
         def get_form_class(*args, **kwargs):
             kwargs['csrf_enabled'] = False
             return form_class(*args, **kwargs)
