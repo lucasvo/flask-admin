@@ -1,9 +1,11 @@
+from flask.ext import wtf
 from flask.ext.admin.model import BaseModelView
+from flask.ext.admin.contrib.mongoengine import filters
 from flask.ext.mongoengine.wtf import model_form
 from flask.ext.mongoengine.wtf.models import ModelForm
 from flask.ext.mongoengine.wtf.orm import ModelConverter, converts
 
-from flask.ext import wtf
+from mongoengine import ReferenceField
 
 
 class AdminModelForm(ModelForm):
@@ -40,6 +42,19 @@ class AdminModelConverter(ModelConverter):
 
 
 class ModelView(BaseModelView):
+    model_converter_class = AdminModelConverter
+    base_form_class = AdminModelForm
+
+    def scaffold_filters(self, name):
+        # TODO: more filters
+        options = None
+
+        if isinstance(self.model._fields[name], ReferenceField):
+            options = [(obj.id, unicode(obj)) for obj in self.model._fields[name].document_type.objects.all()]
+            return [filters.EqualsFilter(name, options)]
+        else:
+            return [filters.ContainsFilter(name, options)]
+
     def get_pk_value(self, instance):
         return instance.id
 
@@ -57,7 +72,7 @@ class ModelView(BaseModelView):
         return {}
 
     def scaffold_form(self):
-        return model_form(self.model, base_class=AdminModelForm, converter=AdminModelConverter())
+        return model_form(self.model, base_class=self.base_form_class, converter=self.model_converter_class())
 
     def create_form(self, form, obj=None):
         return self._edit_form_class(form, obj=obj)
@@ -69,9 +84,23 @@ class ModelView(BaseModelView):
         return self.model.objects.get(pk=id)
 
     def get_list(self, page, sort_field, sort_desc, search, filters):
-        # TODO: finish implementation
         qs = self.model.objects
-        return qs.count(), qs.all()
+
+        if filters:
+            for flt, value in filters:
+                qs = self._filters[flt].apply(qs, value)
+
+        count = qs.count()
+        skip = int(page or 0)*self.page_size
+
+        if sort_field:
+            if sort_desc:
+                qs = qs.order_by('-' + sort_field)
+            else:
+                qs = qs.order_by(sort_field)
+
+        qs = qs[skip:skip+self.page_size]
+        return count, qs
 
     def update_model(self, form, instance):
         form.save()
