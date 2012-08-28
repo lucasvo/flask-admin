@@ -7,6 +7,7 @@ from flask.ext.mongoengine.wtf.orm import ModelConverter, converts
 
 from mongoengine import ReferenceField
 
+import datetime
 
 class AdminModelForm(ModelForm):
     def save(self, commit=True):
@@ -14,7 +15,12 @@ class AdminModelForm(ModelForm):
             update = {}
             for name, field in self._fields.iteritems():
                 try:
-                    if getattr(self.instance, name) != field.data:
+                    if isinstance(getattr(self.instance, name), datetime.datetime):
+                        val = getattr(self.instance, name).replace(tzinfo=None)
+                    else:
+                        val = getattr(self.instance, name)
+                    # Workaround for wtforms not returning aware datetimes.
+                    if val != field.data:
                         update['set__' + name] = field.data
                 except AttributeError:
                     pass
