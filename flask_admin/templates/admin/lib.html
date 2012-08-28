@@ -122,6 +122,8 @@
 
 {% macro render_form(form, cancel_url, extra=None) -%}
     <form action="" method="POST" class="form-horizontal"{% if form.has_file_field %} enctype="multipart/form-data"{% endif %}>
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
       <fieldset>
 
         {{ render_subform(form) }}
