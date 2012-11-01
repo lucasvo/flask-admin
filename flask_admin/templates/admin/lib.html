@@ -79,23 +79,35 @@
     <div class="control-group{% if f.errors %} error{% endif %}">
       {{ f.label(class='control-label') }}
       <div class="controls">
-        {% if f.type == "FieldList" %}
-            {{ f.append_entry() and '' }}
+        {% if f.type == "FieldList" %} 
+        {{ f.append_entry() and '' }}
             <div>
-            {% for subform in f %}
-             {% if loop.last %}
-                 <div style="display:none;" class="form-template" id="form-template-{{ f.name }}">
-                    <p><a class="form-template-remove" href="#">Remove</a></p>
-                     {{ render_subform(subform) }}
-                     <hr>
-                 </div>
-             {% else %}
-                <div>
-                    <p><a class="form-template-remove" href="#">Remove</a></p>
-                     {{ render_subform(subform) }}<hr>
-                </div>
-             {% endif %}
-            {% endfor %}
+              {% if f.unbound_field.field_class.__name__ == 'FormField' %}
+                {% for subform in f %}{{ subform }}
+                   {% if loop.last %}
+                   <div style="display:none;" class="form-template" id="form-template-{{ f.name }}">
+                      <p><a class="form-template-remove" href="#">Remove</a></p>
+                       {{ render_subform(subform) }}
+                       <hr>
+                   </div>
+               {% else %}
+                  <div>
+                      <p><a class="form-template-remove" href="#">Remove</a></p>
+                       {{ render_subform(subform) }}<hr>
+                  </div>
+                  {% endif %}
+              {% endfor %}
+            {% else %}
+                {% for field in f %}
+                    {{ field.label(class='control-label') }}
+                    {% if not focus_set %}
+                        {{ field(autofocus='autofocus') }}
+                    {% set focus_set = True %}
+                    {% else %}
+                      {{ field() }}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             </div>
             <p><a class="form-template-add" href="#">Add another</a></p>
         {% else %}
@@ -123,7 +135,6 @@
 {% macro render_form(form, cancel_url, extra=None) -%}
     <form action="" method="POST" class="form-horizontal"{% if form.has_file_field %} enctype="multipart/form-data"{% endif %}>
       {% if csrf_token %}{# Support for flask-seasurf #}<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% endif %}
-
       <fieldset>
 
         {{ render_subform(form) }}
