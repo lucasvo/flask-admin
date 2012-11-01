@@ -122,7 +122,7 @@
 
 {% macro render_form(form, cancel_url, extra=None) -%}
     <form action="" method="POST" class="form-horizontal"{% if form.has_file_field %} enctype="multipart/form-data"{% endif %}>
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      {% if csrf_token %}{# Support for flask-seasurf #}<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% endif %}
 
       <fieldset>
 
